@@ -379,7 +379,7 @@ void update_BTB(uint32_t PC, Pipe_Op *op){
     branch_buffer[op->BTB_index].conditional = op->branch_cond;
 }
 
-int check_flush_pipe(Pipe_Op *op){ //if true, flush
+_Bool check_flush_pipe(Pipe_Op *op){ //if true, flush
     printf("Checking Flush conditions....\n");
     //check if predicted direction matches actual dir (eg. predict taken, but actually not taken)
     printf("The current op's PC address is: %08x\n", op->pc);
@@ -389,19 +389,19 @@ int check_flush_pipe(Pipe_Op *op){ //if true, flush
     printf("Branch taken (prediction): %d\n", op->predict_taken);
     if (op->is_branch && op->branch_taken != op->predict_taken){
         printf("Flush due to condition 1\n");
-        return 1;
+        return true;
     }
     if (op->is_branch && op->branch_taken && branch_buffer[op->BTB_index].target != op->branch_dest) {
         printf("Flush due to condition 2\n");
-        return 2;
+        return true;
     }
     // case 3 - if BTB misses
     // if (op->is_branch && op->BTB_miss == true){
     //     printf("Flush due to condition 3\n");
-    //     return 3;
+    //     return true;
     // }
     printf("Does not satisfy flush condition\n");
-    return 0;
+    return false;
 }
 
 void pipe_stage_execute()
@@ -732,33 +732,22 @@ void pipe_stage_execute()
     _Bool check_flush_return = check_flush_pipe(op);
     printf("Check flush return value: %d\n", check_flush_return);
 
-    _Bool special_flush = false;
-    uint32_t instr_stall_cbackup;
-    // if (pipe.decode_op != 0){ //special case
-    //     Pipe_Op *temp_pointer = pipe.decode_op;
+    if (pipe.decode_op != 0){
+        Pipe_Op *temp_pointer = pipe.decode_op;
         if(check_flush_return && pipe.instr_stall_state &&
-            op->branch_dest == pipe.PC){
+            op->branch_dest == temp_pointer->pc){
             printf("Special Case: Flushing pipeline (3 stages + continue stall count)...\n");
             //backup stall count
-            instr_stall_cbackup = pipe.instr_stall_count;
-            special_flush = true;
-            // pipe_recover(3, op->branch_dest);
-            
+            uint32_t instr_stall_cbackup = pipe.instr_stall_count;
+            pipe_recover(3, op->branch_dest);
+            pipe.instr_stall_count = instr_stall_cbackup;
+            pipe.instr_stall_state = true;
         }
-    // }
-    else if(check_flush_return == 1){// flush due to condition 1
-        pipe_recover(3, op->pc + 4);
     }
-    else if(check_flush_return == 2){ // if flush due to conditiona 2
+    else if(check_flush_return){
         //Actually flusing 3 stages
-        printf("Flushing pipeline due to condition 2...\n");
+        printf("Flushing pipeline (3 stages)...\n");
         pipe_recover(3, op->branch_dest);
-    }
-
-    if (special_flush){
-        pipe.instr_stall_count = instr_stall_cbackup;
-        pipe.instr_stall_state = true;
-        special_flush = false;
     }
 
     /* BTB Update DEBUG printout*/
@@ -990,11 +979,10 @@ void store_instr_cache(){ //Takes in the PC value and store it into the appropri
     
 // }
 
-_Bool check_BTB_taken (Pipe_Op *op){ // if true, take the branch
-    printf("BTB conditional: %d\n", branch_buffer[op->BTB_index].conditional);
+_Bool check_BTB_taken (Pipe_Op *op){
     /* check whether pipe.PC matches the tag, and also check the valid bit */
     if (branch_buffer[op->BTB_index].valid == true && 
-        branch_buffer[op->BTB_index].addr_tag == pipe.PC || 
+        branch_buffer[op->BTB_index].addr_tag == pipe.PC && 
         branch_buffer[op->BTB_index].conditional == false){
         return true;
     }
@@ -1004,9 +992,9 @@ _Bool check_BTB_taken (Pipe_Op *op){ // if true, take the branch
 _Bool BTB_hit_check (Pipe_Op *op){
     //check if BTB hits or misses
     printf("BTB hit check\n");
-    printf("BTB addr tag: %08x\n", branch_buffer[op->BTB_index].addr_tag);
+    printf("BTB addr tag: %d\n", branch_buffer[op->BTB_index].addr_tag);
     printf("BTB valid: %d\n", branch_buffer[op->BTB_index].valid);
-    if (branch_buffer[op->BTB_index].addr_tag == pipe.PC || branch_buffer[op->BTB_index].valid == 1){
+    if (branch_buffer[op->BTB_index].addr_tag != pipe.PC || branch_buffer[op->BTB_index].valid == 0){
         return true; //BTB miss
     }
     else{
@@ -1108,13 +1096,12 @@ void pipe_stage_fetch()
     //     op->BTB_miss = false;
     // }
 
-    op->BTB_miss = !BTB_hit_check(op);
+    op->BTB_miss = BTB_hit_check(op);
     printf("BTB miss (fetch): %d\n", op->BTB_miss);
-    printf("PHT (fetch) at %d: %d\n", op->pattern_index, global_pattern[op->pattern_index].PHT_entry);
+    printf("PHT (fetch) at %d: %d\n", op->pattern_index, global_pattern[pattern_index]);
 
 
     if (op->BTB_miss == false){
-        printf("check BTB taken: %d\n", check_BTB_taken(op));
         if (global_pattern[op->pattern_index].PHT_entry >= 2 && check_BTB_taken(op) == true){
             op->predict_taken = true;
         }
@@ -1137,7 +1124,7 @@ void pipe_stage_fetch()
     else{
         // Get the target from BTB and apply that as the next pipe.PC
         pipe.PC = branch_buffer[op->BTB_index].target; 
-        printf("Branch is predicted to be TAKEN to the PC: %08x\n", branch_buffer[op->BTB_index].target);
+        printf("Branch is predicted to be TAKEN to the PC: %d\n", branch_buffer[op->BTB_index].target);
     }
     stat_inst_fetch++;
 }
