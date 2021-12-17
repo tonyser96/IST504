@@ -1096,9 +1096,9 @@ void pipe_stage_fetch()
     //     op->BTB_miss = false;
     // }
 
-    op->BTB_miss = BTB_hit_check(op);
+    op->BTB_miss = !BTB_hit_check(op);
     printf("BTB miss (fetch): %d\n", op->BTB_miss);
-    printf("PHT (fetch) at %d: %d\n", op->pattern_index, global_pattern[pattern_index]);
+    printf("PHT (fetch) at %d: %d\n", op->pattern_index, global_pattern[op->pattern_index].PHT_entry);
 
 
     if (op->BTB_miss == false){
