@@ -6,4 +6,4 @@ However, these scripts should be able to be made and verified normally on other 
 
 This repo still contains a lot of bugs and shouldn't be used as reference for other works.
 
-test test 1234
+signature testing
