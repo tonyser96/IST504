@@ -5,10 +5,10 @@ For Lab 3 Submission
 However, these scripts should be able to be made and verified normally on other systems without any required modifications.
 
 Working:
-All inputs in medium and long folder.
-All inputs in inst folder (* For some reason, the verify script results in errors with some inputs. However, when the .sim and .refsim files are run individually, their outputs are actually the same. There appears to be issues with the verify script itself.)
+- All inputs within the medium and long folder.
+- All inputs within the inst folder (* For some reason, the verify script results in errors with some inputs. However, when the .sim and .refsim files are run individually, their outputs are actually the same. There appears to be issues with the verify script itself.)
 
 Working, but with issues:
-Inputs 1-6 from the random folder. The cycles are slightly off from the correct simulation.
+- Inputs 1-6 from the random folder. The cycles are slightly off from the correct simulation, but everything else were simulated correctly.
 
 Credits due to their respective original authors (see each file for more info).
