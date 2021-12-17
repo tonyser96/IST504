@@ -152,7 +152,7 @@ void pipe_stage_wb()
     /* if this was a syscall, perform action */
     if (op->opcode == OP_SPECIAL && op->subop == SUBOP_SYSCALL) {
         if (op->reg_src1_value == 0xA) {
-            pipe.PC = op->pc; /* fetch will do pc += 4, then we stop with correct PC */
+            pipe.PC = op->pc + 4; /* fetch will do pc += 4, then we stop with correct PC */
             RUN_BIT = 0;
         }
     }
@@ -396,10 +396,10 @@ _Bool check_flush_pipe(Pipe_Op *op){ //if true, flush
         return true;
     }
     // case 3 - if BTB misses
-    // if (op->is_branch && op->BTB_miss == true){
-    //     printf("Flush due to condition 3\n");
-    //     return true;
-    // }
+    if (op->is_branch && op->BTB_miss == true){
+        printf("Flush due to condition 3\n");
+        return true;
+    }
     printf("Does not satisfy flush condition\n");
     return false;
 }
@@ -731,8 +731,9 @@ void pipe_stage_execute()
     //     pipe_recover(3, op->branch_dest);
     _Bool check_flush_return = check_flush_pipe(op);
     printf("Check flush return value: %d\n", check_flush_return);
-    printf("Check Flush Debugging values\n");
+    // printf("Check Flush Debugging values\n");
     // printf("Decode pointer value \n", );
+    // printf("OP Branch Taken (actual): %d\n", op->branch_taken);
 
     if (pipe.decode_op != 0){
         Pipe_Op *temp_pointer = pipe.decode_op;
