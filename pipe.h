@@ -61,7 +61,6 @@ typedef struct Pipe_Op {
     uint32_t BTB_index;
     _Bool predict_taken;
     uint8_t pattern_index;
-    // uint8_t GHR;
 
 } Pipe_Op;
 
@@ -103,18 +102,14 @@ typedef struct Pipe_State {
     uint32_t data_stall_count;
     int data_stall_state;
 
-    // int add_extra_fetch;
 } Pipe_State;
 
 typedef struct Cache_Type{
     uint32_t tag, recentness; // Data = instruction, Tag = bits 11 to 31 of PC, recentness (newer = lower value)
-    // uint32_t data;
 } Cache;
 
 typedef struct pattern_history_table{ //global_pattern
-    // uint8_t GHR; // Global Branch History Register and Pattern History Table
     uint8_t PHT_entry;
-    // _Bool has_pattern;
 } PHT;
 
 typedef struct Branch_Target_Buffer{ //branch
