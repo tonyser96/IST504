@@ -128,7 +128,7 @@ void pipe_recover(int flush, uint32_t dest)
 
 //     if (pipe.instr_stall_state == 1){
 //         pipe.add_extra_fetch = 1;
-//     }
+//     } sdfsdfsd
 }
 
 void pipe_stage_wb()
@@ -937,6 +937,9 @@ _Bool check_instr_cache() //Returns true for cache miss or false for cache hit
 
     // printf("Cache Miss\n");
     pipe.instr_stall_count = 50;
+    if (pipe.data_stall_state == true && pipe.data_stall_count == 50) {
+        pipe.instr_stall_count += 50;
+    }
     printf("Set remaining stalls to: %d\n", pipe.instr_stall_count);
     return true; //cache miss (stall)
 }
