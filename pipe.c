@@ -744,10 +744,15 @@ void pipe_stage_execute()
             pipe.instr_stall_state = true;
         }
     }
-    else if(check_flush_return){
+    else if(check_flush_return && op->branch_taken){
         //Actually flusing 3 stages
-        printf("Flushing pipeline (3 stages)...\n");
+        printf("Flushing pipeline (3 stages)...(branch taken)\n");
         pipe_recover(3, op->branch_dest);
+    }
+    else if(check_flush_return && !op->branch_taken)
+    {
+        printf("Flushing pipeline (3 stages)...(branch taken)\n");
+        pipe_recover(3, op->pc + 4);
     }
 
     /* BTB Update DEBUG printout*/
@@ -981,8 +986,8 @@ void store_instr_cache(){ //Takes in the PC value and store it into the appropri
 
 _Bool check_BTB_taken (Pipe_Op *op){
     /* check whether pipe.PC matches the tag, and also check the valid bit */
-    if (branch_buffer[op->BTB_index].valid == true && 
-        branch_buffer[op->BTB_index].addr_tag == pipe.PC && 
+    if ((branch_buffer[op->BTB_index].valid == true && 
+        branch_buffer[op->BTB_index].addr_tag == pipe.PC) || 
         branch_buffer[op->BTB_index].conditional == false){
         return true;
     }
@@ -994,8 +999,8 @@ _Bool BTB_hit_check (Pipe_Op *op){
     printf("BTB hit check\n");
     printf("BTB addr tag: %d\n", branch_buffer[op->BTB_index].addr_tag);
     printf("BTB valid: %d\n", branch_buffer[op->BTB_index].valid);
-    if (branch_buffer[op->BTB_index].addr_tag != pipe.PC || branch_buffer[op->BTB_index].valid == 0){
-        return true; //BTB miss
+    if (branch_buffer[op->BTB_index].addr_tag == pipe.PC || branch_buffer[op->BTB_index].valid == 1){
+        return true; //BTB hit
     }
     else{
         return false;
