@@ -731,6 +731,8 @@ void pipe_stage_execute()
     //     pipe_recover(3, op->branch_dest);
     _Bool check_flush_return = check_flush_pipe(op);
     printf("Check flush return value: %d\n", check_flush_return);
+    printf("Check Flush Debugging values\n");
+    // printf("Decode pointer value \n", );
 
     if (pipe.decode_op != 0){
         Pipe_Op *temp_pointer = pipe.decode_op;
@@ -744,7 +746,7 @@ void pipe_stage_execute()
             pipe.instr_stall_state = true;
         }
     }
-    else if(check_flush_return && op->branch_taken){
+    if(check_flush_return && op->branch_taken){
         //Actually flusing 3 stages
         printf("Flushing pipeline (3 stages)...(branch taken)\n");
         pipe_recover(3, op->branch_dest);
